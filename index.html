@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Tuner Configurator | Multi-Brand</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Palette: Night City V3 */
+        :root {
+            --neon-cyan: #06b6d4;
+            --neon-purple: #a855f7;
+            --neon-red: #ef4444;
+            --bg-dark: #020617;
+            --panel-dark: #0f172a;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #e2e8f0;
+        }
+
+        h1, h2, h3, .brand-font {
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); }
+
+        /* Grid Animation */
+        .car-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+        }
+
+        .car-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #1e293b;
+            position: relative;
+            overflow: hidden;
+        }
+        .car-card:hover {
+            transform: translateY(-4px);
+            border-color: #475569;
+            background: #1e293b;
+        }
+        .car-card.active-car {
+            border-color: var(--neon-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+        }
+        /* Infiniti Theme Override */
+        .car-card[data-brand="infiniti"].active-car {
+            border-color: var(--neon-red);
+            background: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+        }
+        /* Toyota Theme Override */
+        .car-card[data-brand="toyota"].active-car {
+            border-color: #facc15;
+            background: rgba(250, 204, 21, 0.1);
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
+        }
+
+        /* Toggle Switch Animation */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: var(--neon-cyan);
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: var(--neon-cyan);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-slate-950/90 backdrop-blur-lg border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-bold tracking-wider text-white brand-font">PROJECT<span class="text-cyan-400">ALPHA</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-bold tracking-wide">
+                    <a href="#garage" class="text-gray-400 hover:text-white transition-colors">GARAGE</a>
+                    <a href="#workshop" class="text-cyan-400 hover:text-cyan-300 transition-colors">WORKSHOP</a>
+                    <a href="#dyno" class="text-gray-400 hover:text-white transition-colors">DYNO</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="relative h-[50vh] min-h-[400px] flex items-center justify-center overflow-hidden bg-slate-900">
+        <div class="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+        
+        <div class="relative z-10 text-center px-4">
+            <h1 class="text-6xl md:text-8xl font-bold text-white mb-2 tracking-tighter drop-shadow-2xl">
+                VIRTUAL <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">TUNER</span>
+            </h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto font-light">
+                Select Chassis. Install Mods. Analyze Gains. <br>
+                <span class="text-xs uppercase tracking-widest text-slate-500">Now featuring Infiniti VR30 & BMW S63 Platforms</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Garage (Car Selector) -->
+    <section id="garage" class="py-12 bg-slate-950 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="h-8 w-1 bg-cyan-500"></div>
+                <h2 class="text-3xl font-bold text-white">Select Chassis</h2>
+            </div>
+            
+            <div class="car-grid" id="car-grid">
+                <!-- Cars injected via JS -->
+            </div>
+
+            <!-- Active Car Banner -->
+            <div class="mt-8 p-6 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-sm">
+                <div class="flex items-center gap-4">
+                    <div class="text-4xl" id="car-logo">🏎️</div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-white" id="selected-car-name">Select a Car</h3>
+                        <p class="text-gray-400 text-sm mt-1" id="selected-engine-desc">---</p>
+                    </div>
+                </div>
+                <div class="flex gap-4 text-center">
+                    <div class="px-4 py-2 bg-slate-800 rounded border border-slate-700">
+                        <div class="text-[10px] uppercase text-gray-500 tracking-wider">Engine</div>
+                        <div class="text-lg font-bold text-white" id="badge-engine">--</div>
+                    </div>
+                    <div class="px-4 py-2 bg-slate-800 rounded border border-slate-700">
+                        <div class="text-[10px] uppercase text-gray-500 tracking-wider">Stock HP</div>
+                        <div class="text-lg font-bold text-cyan-400" id="badge-hp">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workshop (Mods) -->
+    <section id="workshop" class="py-12 bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                
+                <!-- CONTROLS -->
+                <div class="xl:col-span-4 space-y-6">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="h-8 w-1 bg-purple-500"></div>
+                        <h2 class="text-3xl font-bold text-white">Mod Shop</h2>
+                    </div>
+
+                    <!-- 1. ECU Tuning -->
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">ECU / Tuning Strategy</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center justify-between p-3 rounded border border-slate-700 bg-slate-800/50 hover:bg-slate-800 cursor-pointer transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <input type="radio" name="tune" value="stock" class="accent-cyan-500 w-4 h-4" checked onchange="calc()">
+                                    <span class="font-semibold text-sm">Stock Calibration</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center justify-between p-3 rounded border border-slate-700 bg-slate-800/50 hover:bg-slate-800 cursor-pointer transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <input type="radio" name="tune" value="jb4" class="accent-cyan-500 w-4 h-4" onchange="calc()">
+                                    <div>
+                                        <span class="font-semibold text-sm block text-white">Piggyback (JB4)</span>
+                                        <span class="text-[10px] text-gray-400 block">Warranty Friendly</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono text-cyan-400">$550</span>
+                            </label>
+                            <label class="flex items-center justify-between p-3 rounded border border-slate-700 bg-slate-800/50 hover:bg-slate-800 cursor-pointer transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <input type="radio" name="tune" value="flash" class="accent-cyan-500 w-4 h-4" onchange="calc()">
+                                    <div>
+                                        <span class="font-semibold text-sm block text-white">Full Flash (MHD/Ecutek)</span>
+                                        <span class="text-[10px] text-gray-400 block">Requires Unlock (BMW)</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono text-red-400">$$$</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 2. Bolt-ons -->
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Breathing & Exhaust</h3>
+                        
+                        <!-- Intake -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <div class="text-sm font-bold text-white">Performance Intake</div>
+                                <div class="text-[10px] text-gray-400">Sound + Response</div>
+                            </div>
+                            <input type="checkbox" id="mod-intake" class="w-5 h-5 accent-cyan-500 rounded bg-slate-700 border-slate-600" onchange="calc()">
+                        </div>
+
+                        <!-- Downpipe -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <div class="text-sm font-bold text-white">Downpipe(s)</div>
+                                <div class="text-[10px] text-gray-400">Primary Restriction Removal</div>
+                            </div>
+                            <input type="checkbox" id="mod-dp" class="w-5 h-5 accent-cyan-500 rounded bg-slate-700 border-slate-600" onchange="calc()">
+                        </div>
+
+                        <!-- Exhaust -->
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-sm font-bold text-white">Catback Exhaust</div>
+                                <div class="text-[10px] text-gray-400">Sound only</div>
+                            </div>
+                            <input type="checkbox" id="mod-exhaust" class="w-5 h-5 accent-cyan-500 rounded bg-slate-700 border-slate-600" onchange="calc()">
+                        </div>
+                    </div>
+
+                    <!-- 3. Heavy Hitters -->
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 border-l-4 border-l-red-600">
+                        <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-4">Serious Power & Support</h3>
+                        
+                        <!-- Cooling -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <div class="text-sm font-bold text-white">Upgraded Cooling</div>
+                                <div class="text-[10px] text-gray-400">Heat Exchanger / Intercooler</div>
+                            </div>
+                            <input type="checkbox" id="mod-cooling" class="w-5 h-5 accent-red-500 rounded bg-slate-700 border-slate-600" onchange="calc()">
+                        </div>
+
+                        <!-- Fuel System -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <div class="text-sm font-bold text-white">Fuel System (HPFP)</div>
+                                <div class="text-[10px] text-gray-400">Required for Full E85</div>
+                            </div>
+                            <input type="checkbox" id="mod-hpfp" class="w-5 h-5 accent-red-500 rounded bg-slate-700 border-slate-600" onchange="calc()">
+                        </div>
+
+                        <!-- Turbo -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <div class="text-sm font-bold text-white">Hybrid Turbo(s)</div>
+                                <div class="text-[10px] text-gray-400">Pure800 / Pure Stg 2</div>
+                            </div>
+                            <input type="checkbox" id="mod-turbo" class="w-5 h-5 accent-red-500 rounded bg-slate-700 border-slate-600" onchange="calc()">
+                        </div>
+
+                        <!-- Trans Tune -->
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-sm font-bold text-white">Trans Tune (xHP)</div>
+                                <div class="text-[10px] text-gray-400">Faster Shifts / Line Pressure</div>
+                            </div>
+                            <input type="checkbox" id="mod-trans" class="w-5 h-5 accent-red-500 rounded bg-slate-700 border-slate-600" onchange="calc()">
+                        </div>
+                    </div>
+
+                    <!-- 4. Fuel Type -->
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Octane</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="cursor-pointer text-center py-2 bg-slate-800 rounded border border-slate-700 has-[:checked]:border-cyan-500 has-[:checked]:text-cyan-400">
+                                <input type="radio" name="fuel" value="93" class="hidden" checked onchange="calc()">
+                                <span class="text-xs font-bold">93 Oct</span>
+                            </label>
+                            <label class="cursor-pointer text-center py-2 bg-slate-800 rounded border border-slate-700 has-[:checked]:border-purple-500 has-[:checked]:text-purple-400">
+                                <input type="radio" name="fuel" value="e30" class="hidden" onchange="calc()">
+                                <span class="text-xs font-bold">E30 Mix</span>
+                            </label>
+                            <label class="cursor-pointer text-center py-2 bg-slate-800 rounded border border-slate-700 has-[:checked]:border-red-500 has-[:checked]:text-red-400">
+                                <input type="radio" name="fuel" value="e85" class="hidden" onchange="calc()">
+                                <span class="text-xs font-bold">Full E85</span>
+                            </label>
+                        </div>
+                        <div id="fuel-warning" class="hidden mt-2 text-[10px] text-red-400 bg-red-950/30 p-2 rounded border border-red-900/50">
+                            Warning: Mod requirements not met for this fuel.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD (Right) -->
+                <div class="xl:col-span-8 space-y-6" id="dyno">
+                    
+                    <!-- Main Display -->
+                    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-2xl relative overflow-hidden">
+                        <!-- Background Grid Effect -->
+                        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(0deg, transparent 24%, #22d3ee 25%, #22d3ee 26%, transparent 27%, transparent 74%, #22d3ee 75%, #22d3ee 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, #22d3ee 25%, #22d3ee 26%, transparent 27%, transparent 74%, #22d3ee 75%, #22d3ee 76%, transparent 77%, transparent); background-size: 50px 50px;"></div>
+                        
+                        <div class="flex justify-between items-end mb-6 relative z-10">
+                            <div>
+                                <h3 class="text-sm text-gray-400 uppercase tracking-widest">Estimated Output</h3>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-5xl md:text-6xl font-black text-white tracking-tighter" id="disp-hp">0</span>
+                                    <span class="text-2xl font-bold text-cyan-400">HP</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-gray-400 uppercase tracking-widest">Torque</div>
+                                <div class="flex items-baseline gap-2 justify-end">
+                                    <span class="text-3xl font-bold text-white" id="disp-tq">0</span>
+                                    <span class="text-sm text-gray-500">lb-ft</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-container relative z-10">
+                            <canvas id="dynoChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Stats -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                            <div class="text-[10px] text-gray-500 uppercase mb-1">0-60 MPH</div>
+                            <div class="text-2xl font-black text-white" id="disp-060">--</div>
+                            <div class="text-xs text-green-400" id="gain-060"></div>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                            <div class="text-[10px] text-gray-500 uppercase mb-1">Total Cost</div>
+                            <div class="text-2xl font-black text-green-400" id="disp-cost">$0</div>
+                            <div class="text-[10px] text-gray-500">Est. Parts + Tune</div>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                            <div class="text-[10px] text-gray-500 uppercase mb-1">Reliability</div>
+                            <div class="text-2xl font-black text-yellow-400" id="disp-rel">10/10</div>
+                            <div class="text-[10px] text-gray-500" id="text-rel">Factory</div>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+                            <div class="text-[10px] text-gray-500 uppercase mb-1">Sound Level</div>
+                            <div class="text-2xl font-black text-orange-400" id="disp-sound">1/10</div>
+                            <div class="text-[10px] text-gray-500" id="text-sound">Silent</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-black py-8 text-center border-t border-slate-900 mt-12 text-xs text-gray-600">
+        <p>Disclaimer: Simulated performance data. Not accurate for professional calibration. Modifying vehicles voids warranties.</p>
+        <p class="mt-2">Engines covered: B48, B58, S58, S63, VR30DDTT, N55, S55</p>
+    </footer>
+
+    <script>
+        // --- VEHICLE DATABASE ---
+        const cars = [
+            // --- BMW B58 Platform ---
+            { id: 'm340i', brand: 'bmw', name: 'M340i xDrive', chassis: 'G20', engine: 'B58', hp: 382, tq: 369, z60: 3.8, type: 'i6_turbo' },
+            { id: 'm440i', brand: 'bmw', name: 'M440i xDrive', chassis: 'G22', engine: 'B58', hp: 382, tq: 369, z60: 3.8, type: 'i6_turbo' },
+            { id: 'm240i', brand: 'bmw', name: 'M240i xDrive', chassis: 'G42', engine: 'B58', hp: 382, tq: 369, z60: 3.6, type: 'i6_turbo' },
+            { id: 'x3m40i', brand: 'bmw', name: 'X3 M40i', chassis: 'G01', engine: 'B58', hp: 382, tq: 369, z60: 4.2, type: 'i6_turbo' },
+            { id: 'supra', brand: 'toyota', name: 'GR Supra 3.0', chassis: 'MK5', engine: 'B58', hp: 382, tq: 368, z60: 3.7, type: 'i6_turbo' },
+            { id: '540i', brand: 'bmw', name: '540i xDrive', chassis: 'G30', engine: 'B58', hp: 335, tq: 332, z60: 4.6, type: 'i6_turbo' },
+
+            // --- BMW S58 Platform ---
+            { id: 'm3', brand: 'bmw', name: 'M3 (Base)', chassis: 'G80', engine: 'S58', hp: 473, tq: 406, z60: 4.1, type: 'i6_tt' },
+            { id: 'm3comp', brand: 'bmw', name: 'M3 Comp', chassis: 'G80', engine: 'S58', hp: 503, tq: 479, z60: 3.4, type: 'i6_tt' },
+            { id: 'm4', brand: 'bmw', name: 'M4 Comp', chassis: 'G82', engine: 'S58', hp: 503, tq: 479, z60: 3.4, type: 'i6_tt' },
+            { id: 'm2', brand: 'bmw', name: 'M2', chassis: 'G87', engine: 'S58', hp: 453, tq: 406, z60: 3.9, type: 'i6_tt' },
+            { id: 'x3m', brand: 'bmw', name: 'X3 M Comp', chassis: 'F97', engine: 'S58', hp: 503, tq: 479, z60: 3.3, type: 'i6_tt' },
+
+            // --- BMW 4-Cylinder ---
+            { id: '330i', brand: 'bmw', name: '330i', chassis: 'G20', engine: 'B48', hp: 255, tq: 295, z60: 5.3, type: 'i4_turbo' },
+            { id: '228i', brand: 'bmw', name: '228i GC', chassis: 'F44', engine: 'B46', hp: 228, tq: 258, z60: 6.0, type: 'i4_turbo' },
+
+            // --- BMW V8 ---
+            { id: 'm5', brand: 'bmw', name: 'M5 Comp', chassis: 'F90', engine: 'S63', hp: 617, tq: 553, z60: 2.8, type: 'v8_tt' },
+            { id: 'm550i', brand: 'bmw', name: 'M550i', chassis: 'G30', engine: 'N63', hp: 523, tq: 553, z60: 3.5, type: 'v8_tt' },
+
+            // --- Infiniti ---
+            { id: 'q50', brand: 'infiniti', name: 'Q50 Red Sport', chassis: 'V37', engine: 'VR30DDTT', hp: 400, tq: 350, z60: 4.5, type: 'v6_tt' },
+            { id: 'q60', brand: 'infiniti', name: 'Q60 Red Sport', chassis: 'V37', engine: 'VR30DDTT', hp: 400, tq: 350, z60: 4.4, type: 'v6_tt' },
+            { id: 'q50silver', brand: 'infiniti', name: 'Q50 3.0t', chassis: 'V37', engine: 'VR30DDTT', hp: 300, tq: 295, z60: 5.0, type: 'v6_tt' }
+        ];
+
+        let selectedCar = cars[0];
+        let chartInstance = null;
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGarage();
+            initChart();
+            selectCar(cars[0].id);
+        });
+
+        // --- RENDER GARAGE ---
+        function renderGarage() {
+            const grid = document.getElementById('car-grid');
+            grid.innerHTML = cars.map(car => `
+                <div class="car-card cursor-pointer rounded-lg p-3 text-center bg-slate-900" 
+                     onclick="selectCar('${car.id}')" id="card-${car.id}" data-brand="${car.brand}">
+                    <div class="text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1">${car.brand} ${car.chassis}</div>
+                    <h3 class="text-sm font-bold text-white leading-tight">${car.name}</h3>
+                    <div class="mt-2 inline-block px-2 py-1 bg-slate-950 rounded text-[10px] text-gray-400">${car.engine}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectCar(id) {
+            selectedCar = cars.find(c => c.id === id);
+            
+            // Highlight UI
+            document.querySelectorAll('.car-card').forEach(c => c.classList.remove('active-car'));
+            document.getElementById(`card-${id}`).classList.add('active-car');
+
+            // Update Banner
+            document.getElementById('selected-car-name').innerText = selectedCar.name;
+            document.getElementById('badge-engine').innerText = selectedCar.engine;
+            document.getElementById('badge-hp').innerText = selectedCar.hp + " HP";
+            document.getElementById('car-logo').innerText = selectedCar.brand === 'infiniti' ? '🌀' : (selectedCar.brand === 'toyota' ? '🐂' : '🔵');
+            
+            // Description Logic
+            let desc = "";
+            if (selectedCar.engine === 'VR30DDTT') desc = "Twin-Turbo V6. Huge tuning potential, but heat soaks quickly. Cooling is mandatory.";
+            else if (selectedCar.engine === 'B58') desc = "Inline-6 Turbo. The gold standard of modern tuning. Reliable and potent.";
+            else if (selectedCar.engine === 'S58') desc = "Twin-Turbo Inline-6. A race engine for the street. Massive top-end power.";
+            else if (selectedCar.engine === 'S63') desc = "Twin-Turbo V8. Earth-rotating torque, but modifications are expensive.";
+            document.getElementById('selected-engine-desc').innerText = desc;
+
+            calc();
+        }
+
+        // --- CALCULATION LOGIC ---
+        function calc() {
+            // Get UI State
+            const tune = document.querySelector('input[name="tune"]:checked').value;
+            const hasIntake = document.getElementById('mod-intake').checked;
+            const hasDP = document.getElementById('mod-dp').checked;
+            const hasExhaust = document.getElementById('mod-exhaust').checked;
+            const hasCooling = document.getElementById('mod-cooling').checked;
+            const hasHPFP = document.getElementById('mod-hpfp').checked;
+            const hasTurbo = document.getElementById('mod-turbo').checked;
+            const hasTrans = document.getElementById('mod-trans').checked;
+            const fuel = document.querySelector('input[name="fuel"]:checked').value;
+
+            let hp = selectedCar.hp;
+            let tq = selectedCar.tq;
+            let cost = 0;
+            let rel = 10;
+            let sound = 1;
+
+            // --- 1. HARDWARE MODS ---
+            // Costs vary by platform
+            const isV8 = selectedCar.type === 'v8_tt';
+            const isV6TT = selectedCar.type === 'v6_tt'; // VR30
+            const isS58 = selectedCar.engine === 'S58';
+            const isB58 = selectedCar.engine === 'B58';
+
+            if(hasIntake) {
+                hp += isV8 ? 15 : 5;
+                cost += isV8 || isS58 || isV6TT ? 550 : 350; // Dual intakes cost more
+                sound += 2;
+            }
+
+            if(hasDP) {
+                // Downpipe flow potential
+                const hpGain = isV8 ? 40 : (isS58 ? 25 : 15);
+                hp += hpGain;
+                // Cost: V8/S58/VR30 have 2 downpipes
+                cost += (isV8 || isS58 || isV6TT) ? 900 : 400; 
+                sound += 3;
+                rel -= 0.5;
+            }
+
+            if(hasExhaust) {
+                cost += isV8 ? 3000 : 2000;
+                sound += 4;
+            }
+
+            if(hasCooling) {
+                cost += isV6TT ? 800 : 600; // Heat exchanger for VR30 is crucial
+                rel += 1; // Adds reliability back
+            }
+
+            if(hasHPFP) {
+                cost += 1400;
+                // HPFP doesn't add power itself, allows E85 later
+            }
+
+            if(hasTrans) {
+                cost += 350; // xHP License
+                rel -= 0.5; // Harder shifts
+                // Improves acceleration, not peak HP usually
+            }
+
+            // --- 2. TURBO UPGRADE ---
+            if(hasTurbo) {
+                cost += isV8 ? 6000 : (isS58 ? 4000 : 2500);
+                rel -= 2;
+                // Base hardware gain from big turbo (laggy without tune)
+                hp += 50; 
+                sound += 1;
+            }
+
+            // --- 3. TUNING & FUEL (The Multipliers) ---
+            let tuneGainHP = 0;
+            let tuneGainTQ = 0;
+
+            // Fuel Check Logic
+            const warningEl = document.getElementById('fuel-warning');
+            let fuelValid = true;
+            if(fuel === 'e85' && !hasHPFP && selectedCar.engine !== 'S58') {
+                // S58 stock fuel system is robust, B58/VR30 need HPFP for full E85
+                fuelValid = false;
+            }
+            warningEl.classList.toggle('hidden', fuelValid);
+
+            if(tune === 'jb4') {
+                cost += 550;
+                rel -= 1;
+                const mult = (fuel === 'e85' && fuelValid) ? 1.5 : (fuel === 'e30' ? 1.3 : 1.0);
+                tuneGainHP = (selectedCar.hp * 0.15) * mult;
+                tuneGainTQ = (selectedCar.tq * 0.18) * mult;
+            } 
+            else if(tune === 'flash') {
+                // Flash Cost
+                let unlockCost = (selectedCar.brand === 'bmw' && parseInt(selectedCar.chassis.substring(1)) > 10) ? 1500 : 0; // Femto check rough logic
+                if(selectedCar.brand === 'infiniti') unlockCost = 0; // Ecutek dongle cost is hardware, license is software
+                
+                cost += (selectedCar.brand === 'infiniti' ? 1200 : 600) + unlockCost; // Ecutek vs MHD
+                rel -= 2;
+
+                // Flash Gains
+                let baseGain = 0.20; // 20% gain standard Stage 1
+                if(hasDP) baseGain = 0.30; // Stage 2
+                if(fuel === 'e30') baseGain += 0.05;
+                if(fuel === 'e85' && fuelValid) baseGain += 0.15;
+
+                // Turbo scaling
+                if(hasTurbo) {
+                    baseGain += 0.40; // Huge jump for hybrid turbos
+                    rel -= 1;
+                }
+
+                tuneGainHP = selectedCar.hp * baseGain;
+                tuneGainTQ = selectedCar.tq * (baseGain + 0.05);
+                
+                if(hasTrans) tuneGainTQ += 20; // Torque limiters removed
+                sound += 1; // Burbles
+            }
+
+            // VR30 Heat Soak Penalty logic
+            if(selectedCar.engine === 'VR30DDTT' && !hasCooling && (tune !== 'stock')) {
+                tuneGainHP *= 0.7; // Lose 30% of gains to heat
+                warningEl.innerText = "VR30 requires Heat Exchanger for consistent power!";
+                warningEl.classList.remove('hidden');
+            }
+
+            hp += tuneGainHP;
+            tq += tuneGainTQ;
+
+            // --- 4. PHYSICS ---
+            // 0-60 Calc (Diminishing returns)
+            const pwrRatio = hp / selectedCar.hp;
+            let newZ60 = selectedCar.z60 / (1 + ((pwrRatio - 1) * 0.5));
+            if(hasTrans) newZ60 -= 0.1;
+            // Traction penalty for RWD high power? (Simplified: assume good tires/AWD for now)
+
+            // --- 5. UI UPDATES ---
+            animateValue("disp-hp", Math.round(hp));
+            animateValue("disp-tq", Math.round(tq));
+            animateValue("disp-cost", "$" + cost.toLocaleString());
+            
+            document.getElementById("disp-060").innerText = newZ60.toFixed(1) + "s";
+            const zGain = selectedCar.z60 - newZ60;
+            document.getElementById("gain-060").innerText = zGain > 0 ? `-${zGain.toFixed(1)}s Improved` : "";
+
+            // Rel/Sound Colors
+            document.getElementById("disp-rel").innerText = Math.max(1, Math.round(rel)) + "/10";
+            document.getElementById("disp-rel").className = `text-2xl font-black ${rel > 7 ? 'text-green-400' : (rel > 4 ? 'text-yellow-400' : 'text-red-500')}`;
+            
+            document.getElementById("disp-sound").innerText = Math.min(10, sound) + "/10";
+
+            updateChart(selectedCar, hp, tq);
+        }
+
+        function animateValue(id, val) {
+            document.getElementById(id).innerText = val;
+        }
+
+        // --- CHART ---
+        function initChart() {
+            const ctx = document.getElementById('dynoChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000],
+                    datasets: [
+                        {
+                            label: 'Stock HP',
+                            data: [],
+                            borderColor: '#334155',
+                            borderDash: [5,5],
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Modified HP',
+                            data: [],
+                            borderColor: '#06b6d4', // Cyan
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { labels: { color: '#94a3b8', font: {family: 'Inter'} } } },
+                    scales: {
+                        y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        function updateChart(car, finalHp, finalTq) {
+            // Generate curve shapes
+            // Turbo cars tend to peak mid-range and taper slightly
+            // Big Turbo builds peak higher
+            
+            const stockCurve = [];
+            const modCurve = [];
+            const ratio = finalHp / car.hp;
+
+            for(let i=0; i<11; i++) {
+                const rpm = 2000 + (i*500);
+                // Normalized factor 0 to 1 (peak at ~6000 usually for these engines)
+                let shapeFactor = 0;
+                if (rpm < 3000) shapeFactor = 0.4 + (i * 0.15);
+                else if (rpm < 6000) shapeFactor = 0.8 + ((rpm-4000)/2000 * 0.2);
+                else shapeFactor = 0.95 - ((rpm-6000)/1000 * 0.05); // Taper
+
+                stockCurve.push(car.hp * shapeFactor);
+                
+                // Mod curve: Less taper if turbo upgrade, more low end if tuning
+                // Simple scaler for demo
+                let modShape = shapeFactor;
+                if(ratio > 1.5) { // Big turbo characteristic
+                    if(rpm < 3500) modShape *= 0.9; // Lag
+                    else modShape *= 1.1; // Top end
+                }
+                modCurve.push(finalHp * modShape);
+            }
+
+            chartInstance.data.datasets[0].data = stockCurve;
+            chartInstance.data.datasets[1].data = modCurve;
+            chartInstance.update();
+        }
+
+    </script>
+</body>
+</html>
